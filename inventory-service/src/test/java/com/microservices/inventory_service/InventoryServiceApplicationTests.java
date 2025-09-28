@@ -1,17 +1,16 @@
-package com.microservices.order_service;
+package com.microservices.inventory_service;
 
 import io.restassured.RestAssured;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.testcontainers.containers.MySQLContainer;
-
+import static org.hamcrest.Matchers.equalTo;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class OrderServiceApplicationTests {
+class InventoryServiceApplicationTests {
 
 	@ServiceConnection
 	static MySQLContainer mySQLContainer = new MySQLContainer("mysql:8.3.0");
@@ -19,39 +18,28 @@ class OrderServiceApplicationTests {
 	@LocalServerPort
 	private Integer port;
 
-	static {
-		mySQLContainer.start();
-	}
-
 	@BeforeEach
 	public void setup(){
 		RestAssured.baseURI = "http://localhost";
 		RestAssured.port = port;
 	}
 
-	@Test
-	void shouldSubmitOrder() {
-		String orderRequest = """
-				{
-				    "orderNumber": "12345",
-				    "skuCode": "ABC123",
-				    "price": 100.00,
-				    "quantity": 2
-				}
-				""";
+	static {
+		// Start the MySQL container
+		mySQLContainer.start();
+	}
 
+
+	@Test
+	void contextLoads() {
 		RestAssured.given()
 				.contentType("application/json")
-				.body(orderRequest)
+				.queryParam("skuCode", "iphone_15")
 				.when()
-				.post("/api/v1/orders")
+				.get("/api/v1/inventory")
 				.then()
-				.statusCode(201)
-				.body("id", Matchers.notNullValue())
-				.body("orderNumber", Matchers.equalTo("12345"))
-				.body("skuCode", Matchers.equalTo("ABC123"))
-				.body("price", Matchers.equalTo(100.00f))
-				.body("quantity", Matchers.equalTo(2));
+				.statusCode(200)
+				.body(equalTo("true"));
 	}
 
 }

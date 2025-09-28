@@ -29,7 +29,6 @@ class ProductServiceApplicationTests {
 
 	static {
 		mongoDBContainer.start();
-
 	}
 
 	@Test
