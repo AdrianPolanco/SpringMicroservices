@@ -1,5 +1,6 @@
 package com.microservices.order_service;
 
+import com.microservices.order_service.stubs.InventoryClientStub;
 import io.restassured.RestAssured;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
@@ -7,10 +8,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
+import org.springframework.test.context.TestPropertySource;
 import org.testcontainers.containers.MySQLContainer;
 
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureWireMock(port = 0)
 class OrderServiceApplicationTests {
 
 	@ServiceConnection
@@ -34,11 +38,13 @@ class OrderServiceApplicationTests {
 		String orderRequest = """
 				{
 				    "orderNumber": "12345",
-				    "skuCode": "ABC123",
+				    "skuCode": "iphone_15",
 				    "price": 100.00,
 				    "quantity": 2
 				}
 				""";
+
+		InventoryClientStub.stubInventoryCall("iphone_15", 2);
 
 		RestAssured.given()
 				.contentType("application/json")
@@ -49,7 +55,7 @@ class OrderServiceApplicationTests {
 				.statusCode(201)
 				.body("id", Matchers.notNullValue())
 				.body("orderNumber", Matchers.equalTo("12345"))
-				.body("skuCode", Matchers.equalTo("ABC123"))
+				.body("skuCode", Matchers.equalTo("iphone_15"))
 				.body("price", Matchers.equalTo(100.00f))
 				.body("quantity", Matchers.equalTo(2));
 	}
